@@ -175,3 +175,5 @@ static inline int iterate_file(uint32_t *array_to_fill, char* instr_file_path,
 
     return i;
 }
+
+
