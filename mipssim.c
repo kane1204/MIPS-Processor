@@ -62,9 +62,9 @@ void FSM()
             control->ALUSrcB = 3;
             control->ALUOp = 0;
             if (IR_meta->type == R_TYPE) state = EXEC;
-            else if (opcode == LW || opcode == SW) state = MEM_ADDRESS_COMP;
-            else if (opcode == BEQ) state = EXIT_STATE;
-            else if (opcode == EOP) state = EXIT_STATE;
+            else if (opcode == LW || opcode == SW) state = MEM_ADDR_COMP;
+            else if (opcode == BEQ) state = BRANCH_COMPL;
+            else if (opcode == J) state = JUMP_COMPL;
             else if (opcode == EOP) state = EXIT_STATE;
             else assert(false);
             break;
@@ -84,10 +84,13 @@ void FSM()
             control->ALUSrcA = 1;
             control->ALUSrcB = 2;
             control->ALUOp = 0;
+            if(opcode == LW) state = MEM_ACCESS_LD;
+            else if (opcode == SW) state = MEM_ACCESS_ST;
             break;
         case MEM_ACCESS_LD://3
             control->MemRead = 1;
             control->IorD = 1;
+            state = WB_STEP;
             break;
         case MEM_ACCESS_ST://5
             control->MemWrite = 1;
@@ -113,7 +116,7 @@ void FSM()
             control->PCSource = 2;
             state = INSTR_FETCH;
             break;
-            
+
         default: assert(false);
     }
     arch_state.state = state;
