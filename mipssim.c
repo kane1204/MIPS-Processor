@@ -20,7 +20,8 @@ static inline uint8_t get_instruction_type(int opcode)
 {
     switch (opcode) {
         /// opcodes are defined in mipssim.h
-
+        case ADDI:
+            return R_TYPE;
         case SPECIAL:
             return R_TYPE;
         case EOP:
@@ -159,6 +160,9 @@ void execute()
         case 1:
             alu_opB = WORD_SIZE;
             break;
+        case 2:
+            alu_opB = immediate;
+            break;
         case 3:
             alu_opB = shifted_immediate;
             break;
@@ -213,7 +217,7 @@ void write_back()
 void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 {
     IR_meta->opcode = get_piece_of_a_word(IR, OPCODE_OFFSET, OPCODE_SIZE);
-    IR_meta->immediate = get_sign_extended_imm_id(IR, IMMEDIATE_OFFSET);
+      IR_meta->immediate = get_sign_extended_imm_id(IR, IMMEDIATE_OFFSET);
     IR_meta->function = get_piece_of_a_word(IR, 0, 6);
     IR_meta->jmp_offset = get_piece_of_a_word(IR, 0, 26);
     IR_meta->reg_11_15 = (uint8_t) get_piece_of_a_word(IR, 11, REGISTER_ID_SIZE);
@@ -222,6 +226,12 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
     IR_meta->type = get_instruction_type(IR_meta->opcode);
 
     switch (IR_meta->opcode) {
+        case ADDI:
+          if (IR_meta->opcode  == ADDI)
+              printf("Executing ADDI(%d), $%u = $%u + $%u (function: %u) \n",
+                     IR_meta->opcode,  IR_meta->reg_11_15, IR_meta->reg_21_25,  IR_meta->reg_16_20, IR_meta->function);
+          else assert(false);
+          break;
         case SPECIAL:
             if (IR_meta->function == ADD)
                 printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",
