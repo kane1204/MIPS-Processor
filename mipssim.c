@@ -21,7 +21,7 @@ static inline uint8_t get_instruction_type(int opcode)
     switch (opcode) {
         /// opcodes are defined in mipssim.h
         case ADDI:
-            return R_TYPE;
+            return ADDI;
         case SPECIAL:
             return R_TYPE;
         case EOP:
@@ -45,7 +45,7 @@ void FSM()
     memset(control, 0, (sizeof(struct ctrl_signals)));
 
     int opcode = IR_meta->opcode;
-    int state = arch_state.state;
+    int state =  arch_state.state;
     switch (state) {
         case INSTR_FETCH://0
             control->MemRead = 1;
@@ -63,6 +63,7 @@ void FSM()
             control->ALUSrcB = 3;
             control->ALUOp = 0;
             if (IR_meta->type == R_TYPE) state = EXEC;
+            else if (opcode == ADDI) state =I_TYPE_EXEC;
             else if (opcode == LW || opcode == SW) state = MEM_ADDR_COMP;
             else if (opcode == BEQ) state = BRANCH_COMPL;
             else if (opcode == J) state = JUMP_COMPL;
@@ -115,6 +116,18 @@ void FSM()
         case JUMP_COMPL://9
             control->PCWrite = 1;
             control->PCSource = 2;
+            state = INSTR_FETCH;
+            break;
+        case I_TYPE_EXEC:
+            control->ALUSrcA = 1;
+            control->ALUSrcB = 2;
+            control->ALUOp = 0;
+            state = I_TYPE_COMPL;
+            break;
+        case I_TYPE_COMPL:
+            control->RegDst = 0;
+            control->RegWrite = 1;
+            control->MemtoReg = 0;
             state = INSTR_FETCH;
             break;
 
@@ -214,6 +227,28 @@ void write_back()
 }
 
 
+/*
+void write_back()
+{
+  struct instr_meta *IR_meta = &arch_state.IR_meta;
+  int opcode = IR_meta->opcode;
+  int write_reg_id =0;
+    if (arch_state.control.RegWrite) {
+      if(opcode == ADD){
+         write_reg_id =  arch_state.IR_meta.reg_11_15;
+      }
+
+        check_is_valid_reg_id(write_reg_id);
+        int write_data =  arch_state.curr_pipe_regs.ALUOut;
+        if (write_reg_id > 0) {
+            arch_state.registers[write_reg_id] = write_data;
+            //printf("Reg $%u = %d \n", write_reg_id, write_data);
+        } else printf("Attempting to write reg_0. That is likely a mistake \n");
+    }
+}
+*/
+
+
 void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 {
     IR_meta->opcode = get_piece_of_a_word(IR, OPCODE_OFFSET, OPCODE_SIZE);
@@ -227,10 +262,8 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 
     switch (IR_meta->opcode) {
         case ADDI:
-          if (IR_meta->opcode  == ADDI)
-              printf("Executing ADDI(%d), $%u = $%u + $%u (function: %u) \n",
-                     IR_meta->opcode,  IR_meta->reg_11_15, IR_meta->reg_21_25,  IR_meta->reg_16_20, IR_meta->function);
-          else assert(false);
+            printf("Executing ADDI(%d), $%u = $%u + %u (function: %u) \n",
+                     IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
           break;
         case SPECIAL:
             if (IR_meta->function == ADD)
