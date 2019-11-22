@@ -18,10 +18,14 @@ struct architectural_state arch_state;
 
 static inline uint8_t get_instruction_type(int opcode)
 {
+  printf("opcode :%i\n",opcode );
     switch (opcode) {
         /// opcodes are defined in mipssim.h
+
         case ADDI:
             return ADDI;
+        case BEQ:
+            return BEQ;
         case SPECIAL:
             return R_TYPE;
         case EOP:
@@ -152,15 +156,14 @@ void decode_and_read_RF()
   //printf("opcode read part = %i\n",opcode);
   int read_register_1 = 0;
   int read_register_2 =0;
-  if(opcode == SPECIAL){
+  if(opcode == SPECIAL || opcode == BEQ){
     read_register_1 = arch_state.IR_meta.reg_21_25;
     read_register_2 = arch_state.IR_meta.reg_16_20;
-    check_is_valid_reg_id(read_register_1);
-    check_is_valid_reg_id(read_register_2);
   }else if(opcode == ADDI){
     read_register_1 = arch_state.IR_meta.reg_21_25;
-    check_is_valid_reg_id(read_register_1);
   }
+    check_is_valid_reg_id(read_register_1);
+    check_is_valid_reg_id(read_register_2);
     arch_state.next_pipe_regs.A = arch_state.registers[read_register_1];
     arch_state.next_pipe_regs.B = arch_state.registers[read_register_2];
 }
@@ -200,6 +203,9 @@ void execute()
         case 0:
             next_pipe_regs->ALUOut = alu_opA + alu_opB;
             break;
+        case 1:
+            next_pipe_regs->ALUOut = alu_opA - alu_opB;
+            break;
         case 2:
             if (IR_meta->function == ADD)
                 next_pipe_regs->ALUOut = alu_opA + alu_opB;
@@ -215,6 +221,18 @@ void execute()
         case 0:
             next_pipe_regs->pc = next_pipe_regs->ALUOut;
             break;
+        case 1:
+            if(next_pipe_regs->ALUOut == 0){
+            curr_pipe_regs->pc = curr_pipe_regs->pc+(4*immediate);
+            printf("==0\n");
+          }else {
+            next_pipe_regs->pc = next_pipe_regs->ALUOut;
+            printf("/=0\n");
+          }
+            break;
+
+
+
         default:
             assert(false);
     }
@@ -263,6 +281,10 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             printf("Executing ADDI(%d), $%u = $%u + %u (function: %u) \n",
                      IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
           break;
+        case BEQ:
+            printf("Executing BEQ(%d), if ($%u == $%u) then offset %u (function: %u) \n",
+                     IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
+                     break;
         case SPECIAL:
             if (IR_meta->function == ADD)
                 printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",
@@ -285,7 +307,7 @@ void assign_pipeline_registers_for_the_next_cycle()
 
     if (control->IRWrite) {
         curr_pipe_regs->IR = next_pipe_regs->IR;
-        printf("PC %d: ", curr_pipe_regs->pc / 4);
+        printf("PC %d: ", curr_pipe_regs->pc );
         set_up_IR_meta(curr_pipe_regs->IR, IR_meta);
     }
     curr_pipe_regs->ALUOut = next_pipe_regs->ALUOut;

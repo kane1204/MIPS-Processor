@@ -105,13 +105,13 @@ void memory_write (int address, int write_data);
 ////////////////////////////////////////////////////////////////
 /// Marking Functions --> Do not (re)move those functions
 ////////////////////////////////////////////////////////////////
-static inline void marking_after_clock_cycle() { 
+static inline void marking_after_clock_cycle() {
 #ifdef MIPSDBG
 	if (arch_state.state == 10) return;
 	__gdb(&arch_state);
 #endif
 }
-static inline void marking_at_the_end(){ 
+static inline void marking_at_the_end(){
 #ifdef MIPSDBG
 	printf("Loads:\t %ld\nHits:\t %ld\nStores:\t %ld\nHits:\t %ld\n",
 			arch_state.mem_stats.lw_total,
