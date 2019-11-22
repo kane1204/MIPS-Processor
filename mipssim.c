@@ -159,7 +159,6 @@ void decode_and_read_RF()
     check_is_valid_reg_id(read_register_2);
   }else if(opcode == ADDI){
     read_register_1 = arch_state.IR_meta.reg_21_25;
-    read_register_2 = arch_state.IR_meta.immediate;
     check_is_valid_reg_id(read_register_1);
   }
     arch_state.next_pipe_regs.A = arch_state.registers[read_register_1];
@@ -176,7 +175,9 @@ void execute()
     int alu_opA = control->ALUSrcA == 1 ? curr_pipe_regs->A : curr_pipe_regs->pc;
     int alu_opB = 0;
     int immediate = IR_meta->immediate;
+    //printf("immediate %i\n", immediate);
     int shifted_immediate = (immediate) << 2;
+    //printf("shifted immediate %i\n", shifted_immediate);
     switch (control->ALUSrcB) {
         case 0:
             alu_opB = curr_pipe_regs->B;
@@ -310,21 +311,28 @@ int main(int argc, const char* argv[])
         ///@students: Fill/modify the function bodies of the 7 functions below,
         /// Do NOT modify the main() itself, you only need to
         /// write code inside the definitions of the functions called below.
-
+        //printf("FSM ran:\n");
         FSM();
-
+        //printf("FSM done:\n");
+        //printf("instruction_fetch ran:\n");
         instruction_fetch();
+        //printf("instruction_fetch done:\n");
 
+        //printf("decode_and_read_RF ran:\n");
         decode_and_read_RF();
-
+        //printf("decode_and_read_RF done:\n");
+        //printf("execute ran:\n");
         execute();
+        //printf("execute done:\n");
 
         memory_access();
 
+        //printf("write_back ran:\n");
         write_back();
-
+        //printf("write_back done:\n");
+        //printf("assign_pipeline_registers_for_the_next_cycle ran:\n");
         assign_pipeline_registers_for_the_next_cycle();
-
+        //printf("assign_pipeline_registers_for_the_next_cycle done:\n");
 
        ///@students WARNING: Do NOT change/move/remove code below this point!
         marking_after_clock_cycle();
