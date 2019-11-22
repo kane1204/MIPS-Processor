@@ -9,6 +9,12 @@
 #include <math.h>
 #include "parser.h"
 
+#define MIPSDBG
+
+#ifdef MIPSDBG
+#include "mipsdbg.h"
+#endif
+
 ////////////////////////////////////////////////////////
 /// Struct Definitions
 ////////////////////////////////////////////////////////
@@ -99,8 +105,22 @@ void memory_write (int address, int write_data);
 ////////////////////////////////////////////////////////////////
 /// Marking Functions --> Do not (re)move those functions
 ////////////////////////////////////////////////////////////////
-static inline void marking_after_clock_cycle() { }
-static inline void marking_at_the_end(){ }
+static inline void marking_after_clock_cycle() { 
+#ifdef MIPSDBG
+	if (arch_state.state == 10) return;
+	__gdb(&arch_state);
+#endif
+}
+static inline void marking_at_the_end(){ 
+#ifdef MIPSDBG
+	printf("Loads:\t %ld\nHits:\t %ld\nStores:\t %ld\nHits:\t %ld\n",
+			arch_state.mem_stats.lw_total,
+			arch_state.mem_stats.lw_cache_hits,
+			arch_state.mem_stats.sw_total,
+			arch_state.mem_stats.sw_cache_hits);
+	__gdb(&arch_state);
+#endif
+}
 
 
 static inline void instruction_parser(uint32_t *memory,  char* instr_file_path,
@@ -204,7 +224,6 @@ static inline void parse_arguments(int argc, const char* argv[])
     sscanf(argv[2],"%s", mem_init_path);
     sscanf(argv[3],"%s", reg_init_path);
     printf("Cache size: %d, Mem path: %s, Reg path: %s\n", cache_size, mem_init_path, reg_init_path);
-
 }
 
 
@@ -217,7 +236,9 @@ static inline void arch_state_init(struct architectural_state* arch_state_ptr)
     // Loads the "binary" into the memory array, and init registers
     instruction_parser(arch_state_ptr->memory, mem_init_path,
                        (uint32_t *) arch_state_ptr->registers, reg_init_path);
-
+#ifdef MIPSDBG
+	__gdb(arch_state_ptr);
+#endif
 }
 
 static inline void memory_stats_init(struct architectural_state *state, int bits_for_cache_tag)

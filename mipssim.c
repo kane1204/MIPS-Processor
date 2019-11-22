@@ -1,4 +1,4 @@
-/*************************************************************************************|
+  /*************************************************************************************|
 |   1. YOU ARE NOT ALLOWED TO SHARE/PUBLISH YOUR CODE (e.g., post on piazza or online)|
 |   2. Fill main.c and memory_hierarchy.c files                                       |
 |   3. Do not use any other .c files neither alter main.h or parser.h                 |
@@ -147,10 +147,21 @@ void instruction_fetch()
 
 void decode_and_read_RF()
 {
-    int read_register_1 = arch_state.IR_meta.reg_21_25;
-    int read_register_2 = arch_state.IR_meta.reg_16_20;
+  struct instr_meta *IR_meta = &arch_state.IR_meta;
+  int opcode  = IR_meta->opcode;
+  //printf("opcode read part = %i\n",opcode);
+  int read_register_1 = 0;
+  int read_register_2 =0;
+  if(opcode == SPECIAL){
+    read_register_1 = arch_state.IR_meta.reg_21_25;
+    read_register_2 = arch_state.IR_meta.reg_16_20;
     check_is_valid_reg_id(read_register_1);
     check_is_valid_reg_id(read_register_2);
+  }else if(opcode == ADDI){
+    read_register_1 = arch_state.IR_meta.reg_21_25;
+    read_register_2 = arch_state.IR_meta.immediate;
+    check_is_valid_reg_id(read_register_1);
+  }
     arch_state.next_pipe_regs.A = arch_state.registers[read_register_1];
     arch_state.next_pipe_regs.B = arch_state.registers[read_register_2];
 }
@@ -210,18 +221,26 @@ void execute()
 
 
 void memory_access() {
-  ///@students: appropriate calls to functions defined in memory_hierarchy.c must be added
+  ///@students: appropriate calls to functions defined in memory_hierarchy.c must be addeds
 }
 
 void write_back()
 {
+  struct instr_meta *IR_meta = &arch_state.IR_meta;
+  int opcode  = IR_meta->opcode;
+  int write_reg_id = 0;
+  //printf("opcode write part = %i\n",opcode);
     if (arch_state.control.RegWrite) {
-        int write_reg_id =  arch_state.IR_meta.reg_11_15;
+      if (opcode == SPECIAL){
+        write_reg_id =  arch_state.IR_meta.reg_11_15;
+      }else if(opcode == ADDI){
+        write_reg_id =  arch_state.IR_meta.reg_16_20;
+      }
         check_is_valid_reg_id(write_reg_id);
         int write_data =  arch_state.curr_pipe_regs.ALUOut;
         if (write_reg_id > 0) {
             arch_state.registers[write_reg_id] = write_data;
-            //printf("Reg $%u = %d \n", write_reg_id, write_data);
+            printf("Reg $%u = %d \n", write_reg_id, write_data);
         } else printf("Attempting to write reg_0. That is likely a mistake \n");
     }
 }
