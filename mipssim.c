@@ -26,6 +26,8 @@ static inline uint8_t get_instruction_type(int opcode)
             return ADDI;
         case BEQ:
             return BEQ;
+        case LW:
+            return LW;
         case SPECIAL:
             return R_TYPE;
         case EOP:
@@ -143,9 +145,17 @@ void FSM()
 
 void instruction_fetch()
 {
+    int address = 0;
+    if(arch_state.control.IorD){
+       address = arch_state.curr_pipe_regs.ALUOut;
+    }else{
+       address = arch_state.curr_pipe_regs.pc;
+    }
+
     if (arch_state.control.MemRead) {
-        int address = arch_state.curr_pipe_regs.pc;
         arch_state.next_pipe_regs.IR = memory_read(address);
+        arch_state.curr_pipe_regs.MDR = memory_read(address);
+
     }
 }
 
@@ -156,10 +166,12 @@ void decode_and_read_RF()
   //printf("opcode read part = %i\n",opcode);
   int read_register_1 = 0;
   int read_register_2 =0;
-  if(opcode == SPECIAL || opcode == BEQ){
+  if(opcode == SPECIAL || opcode == BEQ ){
     read_register_1 = arch_state.IR_meta.reg_21_25;
     read_register_2 = arch_state.IR_meta.reg_16_20;
   }else if(opcode == ADDI){
+    read_register_1 = arch_state.IR_meta.reg_21_25;
+  }else if(opcode == LW){
     read_register_1 = arch_state.IR_meta.reg_21_25;
   }
     check_is_valid_reg_id(read_register_1);
@@ -224,10 +236,10 @@ void execute()
         case 1:
             if(next_pipe_regs->ALUOut == 0){
             curr_pipe_regs->pc = curr_pipe_regs->pc+(4*immediate);
-            printf("==0\n");
+            //printf("==0\n");
           }else {
             next_pipe_regs->pc = next_pipe_regs->ALUOut;
-            printf("/=0\n");
+            //printf("/=0\n");
           }
             break;
 
@@ -248,15 +260,21 @@ void write_back()
   struct instr_meta *IR_meta = &arch_state.IR_meta;
   int opcode  = IR_meta->opcode;
   int write_reg_id = 0;
+  int write_data = 0;
   //printf("opcode write part = %i\n",opcode);
     if (arch_state.control.RegWrite) {
       if (opcode == SPECIAL){
         write_reg_id =  arch_state.IR_meta.reg_11_15;
-      }else if(opcode == ADDI){
+      }else if(opcode == ADDI || opcode == LW){
         write_reg_id =  arch_state.IR_meta.reg_16_20;
       }
-        check_is_valid_reg_id(write_reg_id);
-        int write_data =  arch_state.curr_pipe_regs.ALUOut;
+      check_is_valid_reg_id(write_reg_id);
+      if (arch_state.control.MemtoReg) {
+        printf("mdr val: %i\n",arch_state.curr_pipe_regs.MDR);
+         write_data =  arch_state.curr_pipe_regs.MDR;
+      }else{
+         write_data =  arch_state.curr_pipe_regs.ALUOut;
+      }
         if (write_reg_id > 0) {
             arch_state.registers[write_reg_id] = write_data;
             printf("Reg $%u = %d \n", write_reg_id, write_data);
@@ -284,7 +302,11 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
         case BEQ:
             printf("Executing BEQ(%d), if ($%u == $%u) then offset %u (function: %u) \n",
                      IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
-                     break;
+            break;
+        case LW:
+            printf("Executing LW(%d), $%u == mem[base:%u +offset:%u] (function: %u) \n",
+                     IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
+            break;
         case SPECIAL:
             if (IR_meta->function == ADD)
                 printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",

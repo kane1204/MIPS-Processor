@@ -1,4 +1,4 @@
-/*************************************************************************************|
+ /*************************************************************************************|
 |   1. YOU ARE NOT ALLOWED TO SHARE/PUBLISH YOUR CODE (e.g., post on piazza or online)|
 |   2. Fill main.c and memory_hierarchy.c files                                       |
 |   3. Do not use any other .c files neither alter main.h or parser.h                 |
