@@ -246,12 +246,8 @@ void execute()
             }
             break;
         case 2:
-            next_pipe_regs->pc = curr_pipe_regs->pc - IR_meta->jmp_offset;
+            next_pipe_regs->pc = ((IR_meta->jmp_offset)<< 2)+((curr_pipe_regs->pc >>28)<<28) ; //(jump offset)<<2 and  (PC >>28)<<28
             break;
-
-
-
-
 
         default:
             assert(false);
@@ -278,7 +274,6 @@ void write_back()
       }
       check_is_valid_reg_id(write_reg_id);
       if (arch_state.control.MemtoReg) {
-        printf("mdr val: %i\n",arch_state.curr_pipe_regs.MDR);
          write_data =  arch_state.curr_pipe_regs.MDR;
       }else{
          write_data =  arch_state.curr_pipe_regs.ALUOut;
