@@ -28,6 +28,8 @@ static inline uint8_t get_instruction_type(int opcode)
             return BEQ;
         case LW:
             return LW;
+        case J:
+            return J;
         case SPECIAL:
             return R_TYPE;
         case EOP:
@@ -235,13 +237,19 @@ void execute()
             break;
         case 1:
             if(next_pipe_regs->ALUOut == 0){
-            curr_pipe_regs->pc = curr_pipe_regs->pc+(4*immediate);
+              curr_pipe_regs->pc = curr_pipe_regs->pc+(4*immediate);
             //printf("==0\n");
-          }else {
-            next_pipe_regs->pc = next_pipe_regs->ALUOut;
+            }
+            else {
+              next_pipe_regs->pc = next_pipe_regs->ALUOut;
             //printf("/=0\n");
-          }
+            }
             break;
+        case 2:
+            next_pipe_regs->pc = curr_pipe_regs->pc - IR_meta->jmp_offset;
+            break;
+
+
 
 
 
@@ -307,6 +315,10 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             printf("Executing LW(%d), $%u == mem[base:%u +offset:%u] (function: %u) \n",
                      IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
             break;
+        case J:
+            printf("Executing J(%d),Jump to Address: %d (function: %u) \n",
+                     IR_meta->opcode,  IR_meta->jmp_offset, IR_meta->function);
+                break;
         case SPECIAL:
             if (IR_meta->function == ADD)
                 printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",
