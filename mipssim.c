@@ -174,12 +174,12 @@ void decode_and_read_RF()
   //printf("opcode read part = %i\n",opcode);
   int read_register_1 = 0;
   int read_register_2 =0;
-  if(opcode == SPECIAL || opcode == BEQ ){
+  if(opcode == SPECIAL || opcode == BEQ ||opcode ==SW ){
     read_register_1 = arch_state.IR_meta.reg_21_25;
     read_register_2 = arch_state.IR_meta.reg_16_20;
   }else if(opcode == ADDI){
     read_register_1 = arch_state.IR_meta.reg_21_25;
-  }else if(opcode == LW ||opcode ==SW){
+  }else if(opcode == LW ){
     read_register_1 = arch_state.IR_meta.reg_21_25;
   }
     check_is_valid_reg_id(read_register_1);
