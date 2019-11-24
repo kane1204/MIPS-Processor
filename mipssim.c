@@ -152,10 +152,14 @@ void instruction_fetch()
     int address = 0;
     if(arch_state.control.IorD){
        address = arch_state.curr_pipe_regs.ALUOut;
+       printf("hello\n");
     }else{
        address = arch_state.curr_pipe_regs.pc;
     }
-
+    if (arch_state.control.MemWrite) {
+      printf("Address: %i = %d \n", address, arch_state.curr_pipe_regs.B);
+      memory_write(address,arch_state.curr_pipe_regs.B);
+    }
     if (arch_state.control.MemRead) {
         arch_state.next_pipe_regs.IR = memory_read(address);
         arch_state.curr_pipe_regs.MDR = memory_read(address);
@@ -175,7 +179,7 @@ void decode_and_read_RF()
     read_register_2 = arch_state.IR_meta.reg_16_20;
   }else if(opcode == ADDI){
     read_register_1 = arch_state.IR_meta.reg_21_25;
-  }else if(opcode == LW){
+  }else if(opcode == LW ||opcode ==SW){
     read_register_1 = arch_state.IR_meta.reg_21_25;
   }
     check_is_valid_reg_id(read_register_1);
@@ -273,10 +277,6 @@ void write_back()
   int write_reg_id = 0;
   int write_data = 0;
   //printf("opcode write part = %i\n",opcode);
-    if (arch_state.control.MemWrite) {
-      printf("Address: $%u = %d \n", arch_state.curr_pipe_regs.ALUOut, 3);
-      memory_write(arch_state.curr_pipe_regs.ALUOut,3);
-    }
     if (arch_state.control.RegWrite) {
       if (opcode == SPECIAL){
         write_reg_id =  arch_state.IR_meta.reg_11_15;
