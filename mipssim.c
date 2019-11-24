@@ -149,21 +149,13 @@ void FSM()
 
 void instruction_fetch()
 {
-    int address = 0;
-    if(arch_state.control.IorD){
-       address = arch_state.curr_pipe_regs.ALUOut;
-    }else{
-       address = arch_state.curr_pipe_regs.pc;
-    }
-    if (arch_state.control.MemWrite) {
-      printf("Address: %i = %d \n", address, arch_state.curr_pipe_regs.B);
-      memory_write(address,arch_state.curr_pipe_regs.B);
-    }
-    if (arch_state.control.MemRead) {
+    if (arch_state.control.MemRead && !arch_state.control.IorD){
+        int address = arch_state.curr_pipe_regs.pc;
         arch_state.next_pipe_regs.IR = memory_read(address);
-        arch_state.curr_pipe_regs.MDR = memory_read(address);
-
     }
+
+
+
 }
 
 void decode_and_read_RF()
@@ -267,6 +259,15 @@ void execute()
 
 void memory_access() {
   ///@students: appropriate calls to functions defined in memory_hierarchy.c must be addeds
+  if(arch_state.control.IorD){
+     if (arch_state.control.MemRead) {
+         arch_state.curr_pipe_regs.MDR = memory_read(arch_state.curr_pipe_regs.ALUOut);
+     }
+     else if (arch_state.control.MemWrite) {
+       printf("Address: %i = %d \n",  arch_state.curr_pipe_regs.ALUOut, arch_state.curr_pipe_regs.B);
+       memory_write( arch_state.curr_pipe_regs.ALUOut,arch_state.curr_pipe_regs.B);
+     }
+  }
 }
 
 void write_back()
