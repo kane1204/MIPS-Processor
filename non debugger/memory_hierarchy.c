@@ -17,8 +17,8 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
         memory_stats_init(arch_state_ptr, 0); // WARNING: we initialize for no cache 0
     }else {
         // CACHE ENABLED
-        //assert(0); /// @students: Remove assert(0); and initialize cache
-        //memory_stats_init(arch_state_ptr, cache_size);  
+        assert(0); /// @students: Remove assert(0); and initialize cache
+
         /// @students: memory_stats_init(arch_state_ptr, X); <-- fill # of tag bits for cache 'X' correctly
     }
 }
