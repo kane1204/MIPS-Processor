@@ -18,7 +18,7 @@ struct architectural_state arch_state;
 
 static inline uint8_t get_instruction_type(int opcode)
 {
-  printf("opcode :%i\n",opcode );
+  //printf("opcode :%i\n",opcode );
     switch (opcode) {
         /// opcodes are defined in mipssim.h
 
@@ -28,6 +28,8 @@ static inline uint8_t get_instruction_type(int opcode)
             return BEQ;
         case LW:
             return LW;
+        case SW:
+            return SW;
         case J:
             return J;
         case SPECIAL:
@@ -223,8 +225,13 @@ void execute()
         case 2:
             if (IR_meta->function == ADD)
                 next_pipe_regs->ALUOut = alu_opA + alu_opB;
-            else
-                assert(false);
+            else if (IR_meta->function == SLT){
+                if(alu_opA < alu_opB){
+                    next_pipe_regs->ALUOut =1;
+                }else{
+                    next_pipe_regs->ALUOut =0;
+                }
+              }
             break;
         default:
             assert(false);
@@ -266,6 +273,10 @@ void write_back()
   int write_reg_id = 0;
   int write_data = 0;
   //printf("opcode write part = %i\n",opcode);
+    if (arch_state.control.MemWrite) {
+      printf("Address: $%u = %d \n", arch_state.curr_pipe_regs.ALUOut, 3);
+      memory_write(arch_state.curr_pipe_regs.ALUOut,3);
+    }
     if (arch_state.control.RegWrite) {
       if (opcode == SPECIAL){
         write_reg_id =  arch_state.IR_meta.reg_11_15;
@@ -310,6 +321,10 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             printf("Executing LW(%d), $%u == mem[base:%u +offset:%u] (function: %u) \n",
                      IR_meta->opcode,  IR_meta->reg_16_20, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->function);
             break;
+        case SW:
+            printf("Executing SW(%d),  mem[base:%u +offset:%u] == $%u(function: %u) \n",
+                     IR_meta->opcode, IR_meta->reg_21_25,  IR_meta->immediate, IR_meta->reg_16_20,  IR_meta->function);
+            break;
         case J:
             printf("Executing J(%d),Jump to Address: %d (function: %u) \n",
                      IR_meta->opcode,  IR_meta->jmp_offset, IR_meta->function);
@@ -318,6 +333,9 @@ void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
             if (IR_meta->function == ADD)
                 printf("Executing ADD(%d), $%u = $%u + $%u (function: %u) \n",
                        IR_meta->opcode,  IR_meta->reg_11_15, IR_meta->reg_21_25,  IR_meta->reg_16_20, IR_meta->function);
+            else if (IR_meta->function == SLT)
+                printf("Executing SLT(%d), if ($%u < $%u) then set $%u=1 (function: %u) \n",
+                       IR_meta->opcode,  IR_meta->reg_21_25,  IR_meta->reg_16_20, IR_meta->reg_11_15, IR_meta->function);
             else assert(false);
             break;
         case EOP:
@@ -336,7 +354,7 @@ void assign_pipeline_registers_for_the_next_cycle()
 
     if (control->IRWrite) {
         curr_pipe_regs->IR = next_pipe_regs->IR;
-        printf("PC %d: ", curr_pipe_regs->pc );
+        printf("PC %d: ", curr_pipe_regs->pc/4 );
         set_up_IR_meta(curr_pipe_regs->IR, IR_meta);
     }
     curr_pipe_regs->ALUOut = next_pipe_regs->ALUOut;
