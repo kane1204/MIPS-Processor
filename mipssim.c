@@ -299,8 +299,9 @@ void write_back()
 
 void set_up_IR_meta(int IR, struct instr_meta *IR_meta)
 {
+    printf("IR = %i\n",IR);
     IR_meta->opcode = get_piece_of_a_word(IR, OPCODE_OFFSET, OPCODE_SIZE);
-      IR_meta->immediate = get_sign_extended_imm_id(IR, IMMEDIATE_OFFSET);
+    IR_meta->immediate = get_sign_extended_imm_id(IR, IMMEDIATE_OFFSET);
     IR_meta->function = get_piece_of_a_word(IR, 0, 6);
     IR_meta->jmp_offset = get_piece_of_a_word(IR, 0, 26);
     IR_meta->reg_11_15 = (uint8_t) get_piece_of_a_word(IR, 11, REGISTER_ID_SIZE);
