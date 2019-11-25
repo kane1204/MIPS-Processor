@@ -12,18 +12,30 @@
 void memory_state_init(struct architectural_state* arch_state_ptr) {
     arch_state_ptr->memory = (uint32_t *) malloc(sizeof(uint32_t) * MEMORY_WORD_NUM);
     memset(arch_state_ptr->memory, 0, sizeof(uint32_t) * MEMORY_WORD_NUM);
+    int address_size = 32;
+    int address_offset= 4;
+    int address_idx = 0;
+    int address_tag = 0;
+
     if(cache_size == 0){
         // CACHE DISABLED
         memory_stats_init(arch_state_ptr, 0); // WARNING: we initialize for no cache 0
     }
-    else if (cache_size >0) {
+    else if (cache_size >=16) {
         // CACHE ENABLED
+        if (cache_size%2 != 0 ){
+          assert(0);
+        }
+        address_idx = (int) log2(cache_size);
+        address_tag = address_size - address_idx - address_offset;
+        printf("Cache Address tag = %i, idx = %i, offset = %i\n", address_tag,address_idx,address_offset);
         //malloc would be used here to create the cache itself
-        //memory_stats_init(arch_state_ptr, cache_size);
+
+        memory_stats_init(arch_state_ptr, address_tag);
         /// @students: memory_stats_init(arch_state_ptr, X); <-- fill # of tag bits for cache 'X' correctly
     }
     else {
-      assert(0)
+      assert(0);
     }
 
 }
