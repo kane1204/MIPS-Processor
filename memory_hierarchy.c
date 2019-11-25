@@ -8,14 +8,23 @@
 
 /// @students: declare cache-related structures and variables here
 
+struct cache_block {
+    int tag;   // tag bits that tell you if its the correct data
+    int idx;   //index bits
+    int valid; // valid bit either 1 or 0
+    int data;   // data duuh
+};
+
+int address_size = 32;
+int address_offset= 4;
+int address_idx = 0;
+int address_tag = 0;
+struct cache_block *cache;
+struct cache_block block;
 
 void memory_state_init(struct architectural_state* arch_state_ptr) {
     arch_state_ptr->memory = (uint32_t *) malloc(sizeof(uint32_t) * MEMORY_WORD_NUM);
     memset(arch_state_ptr->memory, 0, sizeof(uint32_t) * MEMORY_WORD_NUM);
-    int address_size = 32;
-    int address_offset= 4;
-    int address_idx = 0;
-    int address_tag = 0;
 
     if(cache_size == 0){
         // CACHE DISABLED
@@ -28,8 +37,23 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
         }
         address_idx = (int) log2(cache_size);
         address_tag = address_size - address_idx - address_offset;
-        printf("Cache Address tag = %i, idx = %i, offset = %i\n", address_tag,address_idx,address_offset);
+        printf("Cache Address tag = %u, idx = %u, offset = %u\n", address_tag,address_idx,address_offset);
         //malloc would be used here to create the cache itself
+        //create cache
+        //cache1 = (cache) malloc( sizeof( struct cache ) );
+        int numLines = (int)(cache_size / 16);
+        int ram_aloc = sizeof(block) * numLines;
+        printf("Ram used :%u\n",ram_aloc);
+        cache =  malloc(ram_aloc);
+        assert(cache != NULL);
+        for(int i = 0; i < numLines; i++)
+        {
+           cache[i].valid = 1;
+           cache[i].idx = 0;
+           cache[i].tag = 0;
+           cache[i].data=0;
+           //printf("Valid Cache: %u\n",cache[i].valid);
+        }
 
         memory_stats_init(arch_state_ptr, address_tag);
         /// @students: memory_stats_init(arch_state_ptr, X); <-- fill # of tag bits for cache 'X' correctly
