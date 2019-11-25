@@ -15,12 +15,17 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
     if(cache_size == 0){
         // CACHE DISABLED
         memory_stats_init(arch_state_ptr, 0); // WARNING: we initialize for no cache 0
-    }else {
+    }
+    else if (cache_size >0) {
         // CACHE ENABLED
-        //assert(0); /// @students: Remove assert(0); and initialize cache
-        //memory_stats_init(arch_state_ptr, cache_size);  
+        //malloc would be used here to create the cache itself
+        //memory_stats_init(arch_state_ptr, cache_size);
         /// @students: memory_stats_init(arch_state_ptr, X); <-- fill # of tag bits for cache 'X' correctly
     }
+    else {
+      assert(0)
+    }
+
 }
 
 
