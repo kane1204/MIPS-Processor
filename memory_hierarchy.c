@@ -12,7 +12,7 @@ struct cache_block {
     int tag;   // tag bits that tell you if its the correct data
     int idx;   //index bits
     int valid; // valid bit either 1 or 0
-    int data[16];   // data duuh
+    int data[4];   // data duuh
 };
 
 int address_size = 32;
@@ -34,7 +34,7 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
     else if (cache_size >=16) {
         // CACHE ENABLED
         numLines = (int)(cache_size / 16);
-        address_idx = (int) log2(numLines);
+        address_idx = (int) ceil(log2(numLines));
         address_tag = address_size - address_idx - address_offset;
         printf("Cache Address tag size = %u, idx size = %u, offset size = %u\n", address_tag,address_idx,address_offset);
         //malloc would be used here to create the cache itself
@@ -72,24 +72,31 @@ int memory_read (int address){
     }else{
         // CACHE ENABLED#
         printf("Address= %i \n",address );
-        int offset = get_piece_of_a_word(address, 0, address_offset);
+
+        int offset = (get_piece_of_a_word(address, 0, address_offset)/4);
         int idx = get_piece_of_a_word(address,address_offset,address_idx);
         int tag = get_piece_of_a_word(address,address_offset+address_idx,address_tag);
         printf("acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
 
-        //return (int) arch_state.memory[address / 4];
-        //assert(0); /// @students: Remove assert(0); and implement Memory hierarchy w/ cache
-         if(cache[idx].valid == 0 || cache[idx].tag != tag || cache[idx].data[offset]==0){
+         if(cache[idx].valid == 0 || cache[idx].tag != tag ){
            printf("Miss\n");
             cache[idx].valid = 1;
             cache[idx].tag = tag;
-            cache[idx].data[offset] = arch_state.memory[address / 4];
-            return (int) cache[idx].data[offset];
+            //int buffer_address = address && 0xFFFFFFF0;
+
+            for(int j=0; j<4;j++){
+              cache[idx].data[j] =  (int) arch_state.memory[(address / 4)+j];
+              printf("cache boi %i\n",cache[idx].data[j]);
+            }
+            printf("return boi %i\n",cache[idx].data[offset]);
+            return cache[idx].data[offset];
           }
+
+
           else if((cache[idx].valid == 1) && (cache[idx].tag == tag)){
             arch_state.mem_stats.lw_cache_hits++;
             printf("Hit\n");
-            return (int) cache[idx].data[0];
+            return cache[idx].data[offset];
 
 
           }
@@ -98,7 +105,7 @@ int memory_read (int address){
           }
         /// @students: your implementation must properly increment: arch_state_ptr->mem_stats.lw_cache_hits
     }
-    return 0;
+    //return 0;
 }
 
 // writes data on memory[address / 4]
