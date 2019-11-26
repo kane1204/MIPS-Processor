@@ -33,6 +33,9 @@ void memory_state_init(struct architectural_state* arch_state_ptr) {
     }
     else if (cache_size >=16) {
         // CACHE ENABLED
+        // if(cache_size%16!=0){
+        //   assert(0);
+        // }
         numLines = (int)(cache_size / 16);
         address_idx = (int) ceil(log2(numLines));
         address_tag = address_size - address_idx - address_offset;
@@ -76,16 +79,16 @@ int memory_read (int address){
         int offset = (get_piece_of_a_word(address, 0, address_offset)/4);
         int idx = get_piece_of_a_word(address,address_offset,address_idx);
         int tag = get_piece_of_a_word(address,address_offset+address_idx,address_tag);
-        printf("acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
+        printf("Read: acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
 
          if(cache[idx].valid == 0 || cache[idx].tag != tag ){
            printf("Miss\n");
             cache[idx].valid = 1;
             cache[idx].tag = tag;
-            //int buffer_address = address && 0xFFFFFFF0;
+
 
             for(int j=0; j<4;j++){
-              cache[idx].data[j] =  (int) arch_state.memory[(address / 4)+j];
+              cache[idx].data[j] =  (int) arch_state.memory[(address / 4)-(offset)+j];
               printf("cache boi %i\n",cache[idx].data[j]);
             }
             printf("return boi %i\n",cache[idx].data[offset]);
@@ -97,8 +100,6 @@ int memory_read (int address){
             arch_state.mem_stats.lw_cache_hits++;
             printf("Hit\n");
             return cache[idx].data[offset];
-
-
           }
           else{
             assert(0);
@@ -112,6 +113,11 @@ int memory_read (int address){
 void memory_write(int address, int write_data){
     arch_state.mem_stats.sw_total++;
     check_address_is_word_aligned(address);
+    int offset = (get_piece_of_a_word(address, 0, address_offset)/4);
+    int idx = get_piece_of_a_word(address,address_offset,address_idx);
+    int tag = get_piece_of_a_word(address,address_offset+address_idx,address_tag);
+    printf("Write: acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
+
 
     if(cache_size == 0){
         // CACHE DISABLED
