@@ -82,23 +82,23 @@ int memory_read (int address){
         printf("Read: acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
 
          if(cache[idx].valid == 0 || cache[idx].tag != tag ){
-           printf("Miss\n");
+           printf("Miss Read\n");
             cache[idx].valid = 1;
             cache[idx].tag = tag;
 
 
             for(int j=0; j<4;j++){
               cache[idx].data[j] =  (int) arch_state.memory[(address / 4)-(offset)+j];
-              printf("cache boi %i\n",cache[idx].data[j]);
+              //printf("cache boi %i\n",cache[idx].data[j]);
             }
-            printf("return boi %i\n",cache[idx].data[offset]);
+            //printf("return boi %i\n",cache[idx].data[offset]);
             return cache[idx].data[offset];
           }
 
 
           else if((cache[idx].valid == 1) && (cache[idx].tag == tag)){
             arch_state.mem_stats.lw_cache_hits++;
-            printf("Hit\n");
+            printf("Hit Read\n");
             return cache[idx].data[offset];
           }
           else{
@@ -124,8 +124,21 @@ void memory_write(int address, int write_data){
         arch_state.memory[address / 4] = (uint32_t) write_data;
     }else{
         // CACHE ENABLED
-        arch_state.memory[address / 4] = (uint32_t) write_data;/// @students: Remove assert(0); and implement Memory hierarchy w/ cache
+        if((cache[idx].tag == tag)){
+          arch_state.mem_stats.sw_cache_hits++;
+          printf("Hit Write\n");
+          cache[idx].valid =1 ; 
+          arch_state.memory[address / 4] = (uint32_t) write_data;
+          for(int j=0; j<4;j++){
+            cache[idx].data[j] =  (int) arch_state.memory[(address / 4)-(offset)+j];
+            //printf("cache boi %i\n",cache[idx].data[j]);
+          }
 
+        }else{
+
+        arch_state.memory[address / 4] = (uint32_t) write_data;
+        printf("Miss Write\n");
+        }
         /// @students: your implementation must properly increment: arch_state_ptr->mem_stats.sw_cache_hits
     }
 }
