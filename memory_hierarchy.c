@@ -74,15 +74,15 @@ int memory_read (int address){
         return (int) arch_state.memory[address / 4];
     }else{
         // CACHE ENABLED#
-        printf("Address= %i \n",address );
+        //printf("Address= %i \n",address );
 
         int offset = (get_piece_of_a_word(address, 0, address_offset)/4);
         int idx = get_piece_of_a_word(address,address_offset,address_idx);
         int tag = get_piece_of_a_word(address,address_offset+address_idx,address_tag);
-        printf("Read: acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
+        //printf("Read: acc tag: %i, acc idx: %i, acc offset: %i\n",tag,idx,offset );
 
          if(cache[idx].valid == 0 || cache[idx].tag != tag ){
-           printf("Miss Read\n");
+           //printf("Miss Read\n");
             cache[idx].valid = 1;
             cache[idx].tag = tag;
 
@@ -98,7 +98,7 @@ int memory_read (int address){
 
           else if((cache[idx].valid == 1) && (cache[idx].tag == tag)){
             arch_state.mem_stats.lw_cache_hits++;
-            printf("Hit Read\n");
+            //printf("Hit Read\n");
             return cache[idx].data[offset];
           }
           else{
@@ -111,6 +111,7 @@ int memory_read (int address){
 
 // writes data on memory[address / 4]
 void memory_write(int address, int write_data){
+    //printf("Address= %i \n",address );
     arch_state.mem_stats.sw_total++;
     check_address_is_word_aligned(address);
     int offset = (get_piece_of_a_word(address, 0, address_offset)/4);
@@ -124,15 +125,16 @@ void memory_write(int address, int write_data){
         arch_state.memory[address / 4] = (uint32_t) write_data;
     }else{
         // CACHE ENABLED
-        if((cache[idx].tag == tag)){
+
+        if((cache[idx].tag == tag) && cache[idx].valid ==1){
           arch_state.mem_stats.sw_cache_hits++;
           printf("Hit Write\n");
-          cache[idx].valid =1 ; 
+          cache[idx].valid =1 ;
           arch_state.memory[address / 4] = (uint32_t) write_data;
-          for(int j=0; j<4;j++){
-            cache[idx].data[j] =  (int) arch_state.memory[(address / 4)-(offset)+j];
+          int j=0;
+          cache[idx].data[j] =  (int) arch_state.memory[(address / 4)-(offset)+j];
             //printf("cache boi %i\n",cache[idx].data[j]);
-          }
+
 
         }else{
 
