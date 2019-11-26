@@ -132,10 +132,8 @@ void memory_write(int address, int write_data){
           cache[idx].valid =1 ;
           arch_state.memory[address / 4] = (uint32_t) write_data;
           int j=0;
-          cache[idx].data[j] =  (int) arch_state.memory[(address / 4)-(offset)+j];
+          cache[idx].data[offset] =  (int) arch_state.memory[(address / 4)-(offset)+j];
             //printf("cache boi %i\n",cache[idx].data[j]);
-
-
         }else{
 
         arch_state.memory[address / 4] = (uint32_t) write_data;
